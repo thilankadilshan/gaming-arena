@@ -23,8 +23,8 @@ import type { GameState } from './components/SnakeCanvas';
 const SnakeCanvas = dynamic(() => import('./components/SnakeCanvas'), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full w-full items-center justify-center bg-[#0a0c10] text-amber-500 font-mono text-sm uppercase tracking-widest animate-pulse">
-      BOOTING MECH VIPER HYDRAULICS...
+    <div className="flex h-full w-full items-center justify-center bg-gradient-to-b from-indigo-950 via-purple-900 to-pink-950 text-amber-400 font-mono text-sm uppercase tracking-widest animate-pulse">
+      AWAKENING CELESTIAL CYBER VIPER...
     </div>
   ),
 });
@@ -104,7 +104,7 @@ export default function Snake3DGamePage() {
   };
 
   return (
-    <div className="fixed inset-x-0 bottom-0 top-[65px] z-10 flex flex-col overflow-hidden bg-[#0a0c10] select-none touch-none">
+    <div className="fixed inset-x-0 bottom-0 top-[65px] z-10 flex flex-col overflow-hidden bg-gradient-to-b from-indigo-950 via-purple-900 to-pink-950 select-none touch-none">
       {/* Top Industrial Responsive HUD Bar */}
       <div className="absolute top-2 left-2 right-2 sm:top-3 sm:left-4 sm:right-4 z-20 flex items-center justify-between gap-2 pointer-events-none">
         {/* Left: Back Link */}

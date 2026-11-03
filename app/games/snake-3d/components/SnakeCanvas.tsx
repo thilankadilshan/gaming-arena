@@ -3,11 +3,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import ArenaFloor from './ArenaFloor';
-import SnakeHead from './SnakeHead';
-import SnakeBody from './SnakeBody';
-import AppleMesh from './AppleMesh';
-import StarMesh from './StarMesh';
+import { CelestialArena } from './CelestialArena';
+import {
+  CyberSnakeHead,
+  CyberSnakeSegment,
+  CyberApple,
+  CyberStar,
+} from './CyberSnake';
 import { soundEngine } from '@/lib/audio/soundEngine';
 import { Play } from 'lucide-react';
 
@@ -36,7 +38,7 @@ interface Point {
 const GRID_SIZE = 16;
 const HALF_GRID = 7; // Arena boundary range [-7, 7]
 
-// Dynamic Responsive Camera that guarantees the entire arena is 100% visible on PC and Mobile
+// Dynamic Responsive Camera that guarantees the entire celestial arena & pagodas are 100% visible
 function ResponsiveCamera() {
   const { camera, size } = useThree();
 
@@ -46,37 +48,14 @@ function ResponsiveCamera() {
     const aspect = width / height;
 
     const perspCam = camera as THREE.PerspectiveCamera;
-    const fov = 44;
-    perspCam.fov = fov;
+    perspCam.fov = 42;
 
-    const fovRad = (fov * Math.PI) / 180;
-    const halfFovTan = Math.tan(fovRad / 2);
+    // Elevated 45-degree isometric angle matching the pagoda art [18, 22, 18]
+    // On portrait mobile (aspect < 1.0), scale distance proportionally so all pagodas fit comfortably
+    const scale = aspect < 1.0 ? Math.max(1.0, 1.15 / aspect) : 1.0;
 
-    // Elevated angle at ~66 degrees for clear top-down view with mech 3D profile
-    const pitchRad = (66 * Math.PI) / 180;
-    const sinPitch = Math.sin(pitchRad);
-    const cosPitch = Math.cos(pitchRad);
-
-    // Arena span (grid is 16 units, borders extend to ±8.2)
-    // Desired ground clearance so top HUD and bottom buttons never cover the arena
-    const desiredGroundHeight = 22.0;
-    const distForHeight = (desiredGroundHeight * sinPitch) / (2 * halfFovTan);
-
-    // Desired horizontal span with side margin
-    const desiredGroundWidth = 20.0;
-    const distForWidth = desiredGroundWidth / (2 * halfFovTan * aspect);
-
-    // Ensure the entire arena fits within both width and height on any screen
-    const distance = Math.max(distForHeight, distForWidth);
-
-    const y = distance * sinPitch;
-    const z = distance * cosPitch;
-
-    // In portrait mobile mode, offset target slightly forward so arena sits above the bottom touch controls
-    const targetZ = aspect < 1.0 ? -0.8 : 0.0;
-
-    perspCam.position.set(0, y, z);
-    perspCam.lookAt(0, 0, targetZ);
+    perspCam.position.set(18 * scale, 22 * scale, 18 * scale);
+    perspCam.lookAt(0, 0, 0);
     perspCam.updateProjectionMatrix();
   }, [camera, size.width, size.height]);
 
@@ -402,24 +381,19 @@ export default function SnakeCanvas({
 
   return (
     <div
-      className="relative h-full w-full select-none bg-[#0a0c10]"
+      className="relative h-full w-full select-none bg-gradient-to-b from-indigo-950 via-purple-900 to-pink-950"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
       <Canvas
+        shadows
         dpr={[1, 2]}
-        camera={{
-          // Top-down elevated viewing angle with clear 3D perspective
-          position: [0, 14.5, 6.5],
-          fov: 46,
-        }}
+        camera={{ position: [18, 22, 18], fov: 42 }}
         gl={{
           antialias: true,
           powerPreference: 'high-performance',
         }}
-        onCreated={({ gl, scene, camera }) => {
-          camera.lookAt(0, -0.3, 0);
-
+        onCreated={({ gl, scene }) => {
           return () => {
             scene.traverse((object) => {
               if (object instanceof THREE.Mesh) {
@@ -436,68 +410,77 @@ export default function SnakeCanvas({
             gl.dispose();
           };
         }}
-        shadows
       >
         {/* Dynamic Responsive Camera */}
         <ResponsiveCamera />
 
-        {/* Cinematic Industrial Factory Lighting */}
-        <ambientLight intensity={0.65} color="#cbd5e1" />
+        {/* Warm Sunlight & Soft Ambient Sky Fill */}
+        <ambientLight intensity={0.7} />
         <directionalLight
-          position={[10, 20, 12]}
+          position={[20, 30, 15]}
           intensity={1.8}
           castShadow
-          shadow-mapSize-width={1024}
-          shadow-mapSize-height={1024}
-          color="#ffedd5"
+          shadow-mapSize-width={2048}
+          shadow-mapSize-height={2048}
         />
-        <directionalLight position={[-10, 14, -10]} intensity={0.4} color="#64748b" />
+        {/* Soft pink bottom fill for clouds */}
+        <pointLight position={[0, -5, 0]} color="#f472b6" intensity={1.5} />
 
-        {/* Industrial Hazard-Striped Arena Floor */}
-        <ArenaFloor gridSize={GRID_SIZE} />
+        {/* 1. Celestial Jade & Pagoda Arena */}
+        <CelestialArena boardSize={GRID_SIZE} />
 
-        {/* Real 3D GLB Model Snake Head */}
-        <SnakeHead
-          position={[head.x, 0, head.z]}
-          direction={direction}
-        />
+        {/* 2. Apple / Energized Collectible */}
+        <CyberApple position={[apple.x, 0.25, apple.z]} />
 
-        {/* High-visibility Target Reticle on Next Cell to clearly see where snake is going */}
+        {/* 3. Bonus Star */}
+        {star && <CyberStar position={[star.x, 0.45, star.z]} />}
+
+        {/* High-visibility Target Reticle on Next Cell */}
         {hasStarted && !isGameOverRef.current && (
           <mesh
-            position={[head.x + direction.x, 0.03, head.z + direction.z]}
+            position={[head.x + direction.x, 0.08, head.z + direction.z]}
             rotation={[-Math.PI / 2, 0, 0]}
           >
             <ringGeometry args={[0.26, 0.42, 24]} />
-            <meshBasicMaterial color="#fbbf24" transparent opacity={0.7} />
+            <meshBasicMaterial color="#eab308" transparent opacity={0.75} />
           </mesh>
         )}
 
-        {/* Continuous 3D Tube Body Using GLB PBR Material */}
-        <SnakeBody head={head} segments={bodySegments} />
+        {/* 4. Snake Head */}
+        <CyberSnakeHead
+          position={[head.x, 0.25, head.z]}
+          rotation={[0, Math.atan2(direction.x, direction.z), 0]}
+        />
 
-        {/* Glossy Red Apple on Industrial Mount */}
-        <AppleMesh position={[apple.x, 0, apple.z]} />
-
-        {/* Tachyon Core Bonus Star */}
-        {star && <StarMesh position={[star.x, 0, star.z]} />}
+        {/* 5. Snake Body Segments */}
+        {bodySegments.map((seg, idx) => {
+          const prev = idx === 0 ? head : snake[idx];
+          const rotY = Math.atan2(prev.x - seg.x, prev.z - seg.z);
+          return (
+            <CyberSnakeSegment
+              key={idx}
+              position={[seg.x, 0.25, seg.z]}
+              rotation={[0, rotY, 0]}
+            />
+          );
+        })}
       </Canvas>
 
-      {/* Industrial Start Screen Overlay */}
+      {/* Celestial Start Screen Overlay */}
       {!hasStarted && !isGameOverRef.current && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/60 backdrop-blur-xs pointer-events-auto">
-          <div className="max-w-md rounded-2xl border-2 border-amber-600/60 bg-[#161a22]/95 p-8 text-center shadow-2xl">
+          <div className="max-w-md rounded-2xl border-2 border-amber-500/60 bg-[#161a22]/95 p-8 text-center shadow-2xl">
             <div className="inline-flex items-center gap-2 rounded border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-mono font-bold text-amber-400 mb-3 uppercase tracking-widest">
-              MECH VIPER PROTOCOL
+              CELESTIAL VIPER ASCENSION
             </div>
 
             <h2 className="text-3xl font-black uppercase text-white tracking-wider mb-2">
-              BATTLE ARENA
+              JADE TEMPLE ARENA
             </h2>
 
             <p className="text-xs text-slate-300 mb-6 leading-relaxed">
-              Steer the armored mech viper with <strong className="text-amber-400">WASD</strong> or <strong className="text-amber-400">Arrow Keys</strong>.
-              Consume high-energy fruits & cores to survive the industrial sector.
+              Steer the cybernetic viper across the floating jade platform with <strong className="text-amber-400">WASD</strong> or <strong className="text-amber-400">Arrow Keys</strong> (Swipe on mobile).
+              Consume energized apples to grow and collect celestial stars.
             </p>
 
             <button
@@ -505,7 +488,7 @@ export default function SnakeCanvas({
               className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-3.5 text-sm font-black uppercase tracking-wider text-black hover:bg-amber-400 transition-colors shadow-lg shadow-amber-500/20"
             >
               <Play className="h-5 w-5 fill-current" />
-              DEPLOY MECH (PRESS SPACE)
+              DEPLOY VIPER (PRESS SPACE)
             </button>
           </div>
         </div>
