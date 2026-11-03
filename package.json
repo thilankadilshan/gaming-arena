@@ -1,0 +1,40 @@
+{
+  "name": "gaming-arena",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "prisma:generate": "prisma generate",
+    "prisma:push": "prisma db push"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.20.0",
+    "@react-three/drei": "^9.102.6",
+    "@react-three/fiber": "^8.16.8",
+    "bcryptjs": "^2.4.3",
+    "clsx": "^2.1.1",
+    "framer-motion": "^11.11.9",
+    "jose": "^5.9.3",
+    "lucide-react": "^0.446.0",
+    "next": "^14.2.15",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.5.2",
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.14.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@types/three": "^0.160.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "prisma": "^5.20.0",
+    "tailwindcss": "^3.4.13",
+    "typescript": "^5.4.5"
+  }
+}

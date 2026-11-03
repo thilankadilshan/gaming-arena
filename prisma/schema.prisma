@@ -1,0 +1,35 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  scores       Score[]
+
+  @@map("users")
+}
+
+model Score {
+  id             String   @id @default(uuid())
+  gameName       String   @default("snake_3d") @map("game_name")
+  score          Int
+  applesEaten    Int      @default(0) @map("apples_eaten")
+  starsCollected Int      @default(0) @map("stars_collected")
+  createdAt      DateTime @default(now()) @map("created_at")
+  userId         String   @map("user_id")
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([score(sort: Desc)])
+  @@index([userId, score(sort: Desc)])
+  @@map("scores")
+}
