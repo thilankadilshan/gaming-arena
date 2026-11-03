@@ -38,7 +38,8 @@ interface Point {
 const GRID_SIZE = 16;
 const HALF_GRID = 7; // Arena boundary range [-7, 7]
 
-// Dynamic Responsive Camera that guarantees the entire celestial arena & pagodas are 100% visible
+// Direct elevated top-down camera aligned with the arena grid (No diamond/rhombus distortion)
+// Ensures W/Up goes UP, S/Down goes DOWN, A/Left goes LEFT, D/Right goes RIGHT
 function ResponsiveCamera() {
   const { camera, size } = useThree();
 
@@ -50,11 +51,17 @@ function ResponsiveCamera() {
     const perspCam = camera as THREE.PerspectiveCamera;
     perspCam.fov = 42;
 
-    // Elevated 45-degree isometric angle matching the pagoda art [18, 22, 18]
-    // On portrait mobile (aspect < 1.0), scale distance proportionally so all pagodas fit comfortably
+    // Direct elevated top view aligned straight with the arena grid (rectangular perspective)
+    const baseDistance = 24.0;
+    // On portrait mobile (aspect < 1.0), scale distance so all side pagodas and borders fit within screen width
     const scale = aspect < 1.0 ? Math.max(1.0, 1.15 / aspect) : 1.0;
 
-    perspCam.position.set(18 * scale, 22 * scale, 18 * scale);
+    const dist = baseDistance * scale;
+    // 74-degree elevated top view: grid appears as a crisp rectangular box with clear 3D depth
+    const y = dist * 0.96;
+    const z = dist * 0.28;
+
+    perspCam.position.set(0, y, z);
     perspCam.lookAt(0, 0, 0);
     perspCam.updateProjectionMatrix();
   }, [camera, size.width, size.height]);
@@ -388,7 +395,7 @@ export default function SnakeCanvas({
       <Canvas
         shadows
         dpr={[1, 2]}
-        camera={{ position: [18, 22, 18], fov: 42 }}
+        camera={{ position: [0, 24, 7], fov: 42 }}
         gl={{
           antialias: true,
           powerPreference: 'high-performance',

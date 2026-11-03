@@ -36,13 +36,6 @@ const sakuraPinkMaterial = new THREE.MeshStandardMaterial({
   flatShading: true,
 });
 
-const cloudMaterial = new THREE.MeshStandardMaterial({
-  color: '#fdf2f8',
-  roughness: 0.9,
-  transparent: true,
-  opacity: 0.75,
-});
-
 // ---------------------------------------------------------------------------
 // 2. CORNER PAGODA COMPONENT (Tiered Temple Towers)
 // ---------------------------------------------------------------------------
@@ -179,17 +172,6 @@ export function CelestialArena({ boardSize = 16 }: { boardSize?: number }) {
       {borderTrees.map((pos, idx) => (
         <SakuraCluster key={idx} position={pos} />
       ))}
-
-      {/* Dreamy Cloud Layer Under the Island */}
-      <group position={[0, -1.8, 0]}>
-        {[-8, 0, 8].map((x) =>
-          [-8, 0, 8].map((z) => (
-            <mesh key={`${x}-${z}`} position={[x + Math.sin(z) * 2, -0.5, z]} material={cloudMaterial}>
-              <sphereGeometry args={[4.2, 12, 12]} />
-            </mesh>
-          ))
-        )}
-      </group>
     </group>
   );
 }
